@@ -1,22 +1,13 @@
-FROM node:18
-
-WORKDIR /usr/src/app
+FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:18
 
 COPY package.json yarn.lock ./
 
-RUN yarn install
-RUN apt-get update && apt-get install -y tar gzip
-RUN mkdir -p /usr/local/bin/package
-RUN curl -fLo /tmp/lambda-runtime.tgz https://github.com/aws/aws-lambda-nodejs-runtime-interface-client/releases/download/v3.0.0/aws-lambda-ric-3.0.0.tgz && \
-    mkdir -p /usr/local/bin/package-tmp && \
-    tar -xzf /tmp/lambda-runtime.tgz -C /usr/local/bin/package-tmp && \
-    mv /usr/local/bin/package-tmp/package/* /usr/local/bin/package/ && \
-    rmdir /usr/local/bin/package-tmp/package && \
-    rm -r /usr/local/bin/package-tmp && \
-    rm /tmp/lambda-runtime.tgz
-
-RUN ls -la /usr/local/bin/
+RUN yum -y update \
+      && yum -y groupinstall "Development Tools" \
+      && yum install -y nodejs gcc-c++ cairo-devel \
+	                      libjpeg-turbo-devel pango-devel giflib-devel \
+	                      zlib-devel librsvg2-devel
 
 COPY . .
 
-CMD [ "/usr/local/bin/package/bin/index.mjs", "app.handler"]
+CMD [ "index.handler" ]
